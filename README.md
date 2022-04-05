@@ -6,7 +6,7 @@ This repository provides the source code for the designer tool that enables user
 Download or clone this repository:
 
 ```bash
-git clone https://github.com/zhou325/F2Q.git
+git clone https://github.com/tdavislab/F2Q.git
 cd F2Q
 ```
 
