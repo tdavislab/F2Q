@@ -2,12 +2,12 @@
 
 This is the source code for the designer tool for the survey flowchart.
 
-![interface](screenshots/interface-new.png)
+![interface](screenshots/interface.png)
 
 ## User Manual
 
-#### 1. Add an element
-By clicking on the glyphs on the header (Q/A/i), the system will add a corresponding element to the graph automatically.
+#### 1. Add a node
+By clicking on the glyphs on the header (Q/A/i), the system will add a corresponding node to the graph automatically.
 
 ![add_element](screenshots/1.png)
 
@@ -21,11 +21,11 @@ Notice:
 + An answer node cannot have more than one question node as its child.
 + The information node is always a leaf of the tree.
 
-#### 3. Delete an element or an edge
-By double click on an element or an edge, the user is able to remove the element or the edge.
+#### 3. Delete a node or an edge
+By double click on a node or an edge, the user is able to remove the node or the edge.
 
-#### 4. Add information to an element
-By double click on an element, the user is able to add the content and the keyword to the element. The content will be displayed in the user interface.
+#### 4. Add text to a node
+By double click on a node, the user is able to add the text content and the keyword to the node. The text content will be displayed in the user interface.
 
 ![add_information](screenshots/2.png)
 
