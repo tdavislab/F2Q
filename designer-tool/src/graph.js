@@ -8,11 +8,12 @@ class Graph{
         this.current_depth = 0;
         this.current_level = 0;
         this.depth_step = 80;
-        this.level_step = 80;
+        this.level_step = 60;
         this.square_width = 50;
         this.circle_r = 25;
         this.margin = 20;
         this.if_add_edge = false;
+        this.depth2level = {}
 
         this.init_svg();
         this.init_tooltips();
@@ -151,9 +152,12 @@ class Graph{
 
         let roots = [];
         let visited = [];
+        let old2new = {};
 
         for(let nid in this.nodes){
             let node = this.nodes[nid];
+            node.text_content = node.text_content.replaceAll("{}", ",");
+            node.text_keyword = node.text_keyword.replaceAll("{}", ",");
             if(node.parents.length === 0){
                 roots.push(node);
             }
@@ -163,9 +167,21 @@ class Graph{
             dfs(root, 0, i);
         }
 
+
         function dfs(root, depth=0, level=0){
+            if(depth in that.depth2level){
+                that.depth2level[depth] += 1;
+                level = that.depth2level[depth];
+            } else {
+                that.depth2level[depth] = 0;
+                level = 0;
+            }
+
             that.current_depth = Math.max(that.current_depth, depth);
-            that.current_level = Math.max(that.current_level, level);
+            // re-assign id to the nodes
+            let old_id = root.id
+            root.id = `${root.type}${depth}${level}`;
+            old2new[old_id] = root.id;
             //  compute coords
             root.coords.x = (that.depth_step * depth) % that.svg_width + that.margin;
             root.coords.y = that.level_step * level + that.margin;
@@ -179,6 +195,45 @@ class Graph{
                 }
             }
         }
+        that.current_level = this.depth2level[that.current_depth];
+        // re-generate nodes and edges dict
+        let nodes = {};
+        let edges = {};
+        for(let nid in this.nodes){
+            let node = this.nodes[nid];
+            let new_id = node.id;
+            let children_new = [];
+            node.children.forEach(c=>{
+                children_new.push(old2new[c]);
+            });
+            node.children = children_new;
+            let edges = []
+            for(let i=0; i<node.edges.length; i++){
+                let eid = node.edges[i];
+                let source = eid.split("-")[0];
+                let target = eid.split("-")[1];
+                let source_new = old2new[source];
+                let target_new = old2new[target];
+                edges.push(`${source_new}-${target_new}`);
+            }
+            node.edges = edges;
+            nodes[new_id] = node;
+        }
+        for(let eid in this.links){
+            let source = eid.split("-")[0];
+            let target = eid.split("-")[1];
+            let source_new = old2new[source];
+            let target_new = old2new[target];
+            let edge = this.links[eid];
+            edge.source = source_new;
+            edge.target = target_new;
+            edge.id = `${source_new}-${target_new}`;
+            edges[`${source_new}-${target_new}`] = edge;
+        }
+        this.nodes = nodes;
+        this.links = edges;
+
+        console.log("links", this.links)
 
         d3.select("#graph-svg").selectAll("g").remove();
         this.init_svg();
@@ -244,7 +299,7 @@ class Graph{
                 children += c+";"
             });
             children = children.slice(0, -1);
-            csv_string += node.id + "," + node.type + "," + children + "," + node.text_content + "," + node.text_keyword + "," + node.color + row_delimitor;
+            csv_string += node.id + "," + node.type + "," + children + "," + node.text_content.replaceAll(",", "{}") + "," + node.text_keyword.replaceAll(",", "{}") + "," + node.color + row_delimitor;
         }
         csv_string = csv_string.slice(0, -2);
         return csv_string;
@@ -289,6 +344,7 @@ class Graph{
     init_svg(){
         this.svg_width = parseInt(d3.select("#graph-container").style("width"))-20;
         this.svg_height = 680;
+        // this.svg_height = 1000;
         d3.select("#graph-svg")
             .attr("width", this.svg_width)
             .attr("height", this.svg_height);
@@ -297,6 +353,34 @@ class Graph{
             .attr("id", "edge-group");
         this.element_group = d3.select("#graph-svg").append("g")
             .attr("id", "element-group");
+
+        // draw grid
+        // this.grid_group = d3.select("#graph-svg").append("g")
+        //     .attr("id", "grid-group");
+        
+        // let max_cols = this.svg_width / this.depth_step;
+        // let max_rows = this.svg_height / this.level_step;
+        // for(let i=0; i <= max_cols; i++){
+        //     this.grid_group.append("line")
+        //         .attr("x1", i * this.depth_step)
+        //         .attr("y1", 0)
+        //         .attr("x2", i * this.depth_step)
+        //         .attr("y2", this.svg_height)
+        //         .attr("stroke", "grey")
+        //         .style("opacity", 0.6)
+        //         .style("stroke-dasharray", ("3, 3"))
+        // }
+        // for(let i=0; i <= max_rows; i++){
+        //     this.grid_group.append("line")
+        //         .attr("x1", 0)
+        //         .attr("y1", i * this.level_step)
+        //         .attr("x2", this.svg_width)
+        //         .attr("y2", i * this.level_step)
+        //         .attr("stroke", "grey")
+        //         .style("opacity", 0.6)
+        //         .style("stroke-dasharray", ("3, 3"))
+        // }
+        
     }
 
     init_tooltips() {
@@ -461,7 +545,15 @@ class Graph{
                 this.current_depth += 1;
             }
         }
-        this.current_id = `${ctype}${this.current_depth}${this.current_level}`;
+        let level = 0;
+        if(this.current_depth in this.depth2level){
+            level = this.depth2level[this.current_depth] + 1;
+            this.depth2level[this.current_depth] += 1;
+        } else {
+            this.depth2level[this.current_depth] = 0;
+        }
+        
+        this.current_id = `${ctype}${this.current_depth}${level}`;
         let current_element;
         if(!(this.current_id in this.nodes)){
             current_element = {"id":this.current_id, "text_content":"", "text_keyword":"", "children":[], "type":ctype, "parents":[], "edges":[], "coords":{}, "color":""};
@@ -476,7 +568,8 @@ class Graph{
         }
                   
         let rx = (this.depth_step * this.current_depth) % this.svg_width + this.margin;
-        let ry = this.level_step * this.current_level + this.margin;
+        // let ry = this.level_step * this.current_level + this.margin;
+        let ry = this.level_step * level + this.margin;
 
         current_element.coords.x = rx;
         current_element.coords.y = ry;

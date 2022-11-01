@@ -1,6 +1,6 @@
 {
-    "chart_path": "example1.csv",
-    "survey_title": "",
+    "chart_path": "protection.csv",
+    "survey_title": "Legal Help - Protection",
     "introduction": "",
     "instruction": ""
 }

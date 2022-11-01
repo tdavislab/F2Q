@@ -111,10 +111,10 @@ d3.json("../config.json").then(data=>{
             let content = "";
             answer_record.forEach(r=>{
                 if(r.q!="na"){
-                    content += "Q: "+data_dict[r.q]['text_content'];
+                    content += "Q: "+data_dict[r.q]['text_content'].replaceAll("{}", ",");
                     content += "\n";
                 }
-                content += "A: "+data_dict[r.a]['text_content'];
+                content += "A: "+data_dict[r.a]['text_content'].replaceAll("{}", ",");
                 content += "\n\n";
             })
                 // a [save as] dialog will be shown
@@ -156,7 +156,7 @@ function draw_question(q){
         .attr("id", "question")
     container.append("div")
         .attr("class", "question-entry")
-        .html(q['text_content']);
+        .html(q['text_content'].replaceAll("{}", ","));
 
     // let width = $(d3.select("#question-container").node()).width();
     // let height = "300px";
@@ -190,7 +190,7 @@ function draw_answers(answer_list){
         .enter().append("div")
         .attr("class", "answer-entry")
         // .classed("answer-entry")
-        .html(d=>d['text_content'])
+        .html(d=>d['text_content'].replaceAll("{}", ","))
         .on("mouseover", function(d){
             // d3.select(this).style("background-color", "lightgrey")
             d3.select(this).style("background-color", "lightblue")
@@ -220,7 +220,7 @@ function draw_information(info){
         .attr("id", "question")
     container.append("div")
         .attr("class", "question-entry")
-        .html(info['text_content']);
+        .html(info['text_content'].replaceAll("{}", ","));
 
     d3.select("#previous-question").style("visibility", "visible");
     d3.select("#download-form").style("visibility", "visible");
